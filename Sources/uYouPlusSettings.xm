@@ -180,6 +180,33 @@ extern NSBundle *uYouPlusBundle();
     ];
     [sectionItems addObject:developers];
 
+    YTSettingsSectionItem *pasteSettings = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"Paste Settings")
+        titleDescription:LOC(@"Paste settings from clipboard and apply")
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            NSString *settingsString = [[UIPasteboard generalPasteboard] string];
+
+            if (settingsString.length > 0) {
+                NSArray *lines = [settingsString componentsSeparatedByString:@"\n"];
+
+                for (NSString *line in lines) {
+                    NSArray *components = [line componentsSeparatedByString:@": "];
+                    if (components.count == 2) {
+                        NSString *key = components[0];
+                        BOOL value = [components[1] intValue];
+                        [[NSUserDefaults standardUserDefaults] setBool:value forKey:key];
+                    }
+                }
+            }
+            [settingsViewController reloadData];
+            SHOW_RELAUNCH_YT_SNACKBAR;
+            return YES;
+        }
+    ];
+    [sectionItems addObject:pasteSettings];
+
     YTSettingsSectionItem *exitYT = [%c(YTSettingsSectionItem)
         itemWithTitle:LOC(@"QUIT_YOUTUBE")
         titleDescription:nil
@@ -319,7 +346,8 @@ extern NSBundle *uYouPlusBundle();
     SWITCH_ITEM2(LOC(@"STOCK_VOLUME_HUD"), LOC(@"STOCK_VOLUME_HUD_DESC"), @"stockVolumeHUD_enabled");
     SWITCH_ITEM2(LOC(@"Disable pull-to-fullscreen gesture"), LOC(@"Disable the drag gesture to enter vertical fullscreen. Only applies to landscape videos."), @"disablePullToFull_enabled");
     SWITCH_ITEM(LOC(@"Disable Double tap to skip chapter"), LOC(@"Disable the 2-finger double tap gesture that skips forward/backward by a chapter"), @"disableChapterSkip_enabled");
-    SWITCH_ITEM2(LOC(@"Always use remaining time"), LOC(@"Change the default to show time remaining in the player bar"), @"alwaysShowRemainingTime_enabled");
+    SWITCH_ITEM(LOC(@"Always use remaining time"), LOC(@"Change the default to show time remaining in the player bar"), @"alwaysShowRemainingTime_enabled");
+    SWITCH_ITEM(LOC(@"Disable toggle time remaining"), LOC(@"Disables changing time elapsed to time remaining. Use with other setting to always show remaining time."), @"disableRemainingTime_enabled");
 
     # pragma mark - Video controls overlay options
     SECTION_HEADER(LOC(@"VIDEO_PLAYER_OPTIONS"));
@@ -1086,6 +1114,7 @@ extern NSBundle *uYouPlusBundle();
     # pragma mark - Miscellaneous
     SECTION_HEADER(LOC(@"MISCELLANEOUS"));
 
+    SWITCH_ITEM2(LOC(@"Adblock Workaround (Lite)"), LOC(@"Uses weaker adblocking code, this will disable uYou's Adblocking Option."), @"uYouAdBlockingWorkaroundLite_enabled");
     SWITCH_ITEM2(LOC(@"Adblock Workaround"), LOC(@"Uses stronger adblocking code"), @"uYouAdBlockingWorkaround_enabled");
     SWITCH_ITEM3(
         LOC(@"Fake Premium"),
@@ -1098,7 +1127,7 @@ extern NSBundle *uYouPlusBundle();
             // Alert if the version is partially incompatible and the toggle is being turned on
             NSComparisonResult result = [appVersion compare:@"18.35.4" options:NSNumericSearch];
             if (enable && result == NSOrderedAscending) {
-                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Incompatible" message:[NSString stringWithFormat:@"Warning: The \"You\" Tab doesn't exist in v%@.\nFake Logo will still work.", appVersion] preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:[NSString stringWithFormat:@"The \"You\" Tab doesn't exist in v%@, fake buttons will not be created.\nBut the \"Fake Premium Logo\" will still work.", appVersion] preferredStyle:UIAlertControllerStyleAlert];
                 UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
                 [alert addAction:okAction];
                 [settingsViewController presentViewController:alert animated:YES completion:nil];
@@ -1126,6 +1155,7 @@ extern NSBundle *uYouPlusBundle();
     SWITCH_ITEM2(LOC(@"NEW_MINIPLAYER_STYLE"), LOC(@"NEW_MINIPLAYER_STYLE_DESC"), @"bigYTMiniPlayer_enabled");
     SWITCH_ITEM2(LOC(@"YT_RE_EXPLORE"), LOC(@"YT_RE_EXPLORE_DESC"), @"reExplore_enabled");
     SWITCH_ITEM2(LOC(@"Hide Indicators"), LOC(@"Hides all Indicators that were in the App."), @"hideSubscriptionsNotificationBadge_enabled");
+    SWITCH_ITEM2(LOC(@"Fix Casting"), LOC(@"Changes a few A/B flags to fix casting"), @"fixCasting_enabled");
     SWITCH_ITEM(LOC(@"ENABLE_FLEX"), LOC(@"ENABLE_FLEX_DESC"), @"flex_enabled");
 
     if ([settingsViewController respondsToSelector:@selector(setSectionItems:forCategory:title:icon:titleDescription:headerHidden:)])
